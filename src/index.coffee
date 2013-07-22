@@ -14,7 +14,7 @@ exports.cat = (inputMapFiles, outJSFile, outMapFile) ->
         # concatenate the file
         srcPath = path.join(path.dirname(f), map.file)
         src = readFileSync(srcPath, 'utf-8')
-        src = src.replace(/\/\/[@#]\ssourceMappingURL[^\r\n]*/g, '//')
+        src = src.replace(/\r?\n\/\/[@#]\ssourceMappingURL[^\r\n]*/g, '')
         buffer.push(src)
 
         # add all mappings in this file
