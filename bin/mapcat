@@ -15,16 +15,24 @@ var ARGS = optimist
     .describe("mapout", "Specify an output map file (default ./map.js)")
         .alias("m", "mapout")
         .string("mapout")
+    .describe("prepend", "Specify code to prepend to the output")
+        .alias("p", "prepend")
+        .string("prepend")
+    .describe("append", "Specify code to append to the output")
+        .alias("a", "append")
+        .string("append")
     .wrap(80)
     .argv;
 
 var inputMapFiles = ARGS._ || [];
 var outMapFile = ARGS.mapout || 'out.map';
 var outJSFile = ARGS.jsout || 'out.js';
+var prepend = ARGS.prepend;
+var append = ARGS.append;
 
 if (! inputMapFiles.length) {
     sys.puts(optimist.help());
     process.exit(0);
 }
 
-cat(inputMapFiles, outJSFile, outMapFile);
+cat(inputMapFiles, outJSFile, outMapFile, prepend, append);

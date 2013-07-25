@@ -2,23 +2,31 @@
 path = require('path')
 {SourceMapConsumer, SourceMapGenerator} = require('source-map')
 
-exports.cat = (inputMapFiles, outJSFile, outMapFile) ->
+exports.cat = (inputMapFiles, outJSFile, outMapFile, prepend, append) ->
     buffer = []
     generator = new SourceMapGenerator
         file: outJSFile
 
     lineOffset = 0
+    if prepend
+        buffer.push(prepend)
+        lineOffset += (prepend.match(/\n/)?.length or 0) + 1
+
     for f in inputMapFiles
-        map = new SourceMapConsumer(readFileSync(f, 'utf-8'))
+        if path.extname(f) == '.map'
+            map = new SourceMapConsumer(readFileSync(f, 'utf-8'))
+            srcPath = path.join(path.dirname(f), map.file)
+        else
+            map = null
+            srcPath = f
 
         # concatenate the file
-        srcPath = path.join(path.dirname(f), map.file)
         src = readFileSync(srcPath, 'utf-8')
         src = src.replace(/\r?\n\/\/[@#]\ssourceMappingURL[^\r\n]*/g, '')
         buffer.push(src)
 
-        # add all mappings in this file
-        map.eachMapping (mapping) ->
+        # If we have a map, add all mappings in the file
+        map?.eachMapping (mapping) ->
             origSrc = path.join(path.dirname(f), mapping.source)
             mapping =
                 generated:
@@ -32,6 +40,9 @@ exports.cat = (inputMapFiles, outJSFile, outMapFile) ->
 
         # update line offset so we could start working with the next file
         lineOffset += src.split('\n').length
+
+    if append
+        buffer.push(append)
 
     buffer.push "//# sourceMappingURL=#{path.relative(path.dirname(outJSFile), outMapFile)}"
 
